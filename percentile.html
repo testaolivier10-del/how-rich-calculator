@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Rich Are You, Really? — US Household Income Percentile</title>
+<meta name="description" content="See where your household income ranks against every other household in the United States, based on real 2025 income data.">
+<style>
+  :root{
+    --paper:#F5F1E8;
+    --ink:#1B1B1B;
+    --plum:#4A2545;
+    --brass:#A8763E;
+    --line:#DCD4C2;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'New York','Iowan Old Style','Georgia',serif;
+    line-height:1.5;
+  }
+  .num{
+    font-family:'SFMono-Regular','Menlo',monospace;
+    font-variant-numeric:tabular-nums;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:56px 24px 80px;
+  }
+  h1{
+    font-size:clamp(26px,5vw,36px);
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0 0 12px;
+    max-width:16ch;
+  }
+  .lede{
+    color:#5A5248;
+    font-size:16px;
+    max-width:48ch;
+    margin:0 0 40px;
+  }
+  .field{
+    margin-bottom:8px;
+  }
+  .field label{
+    display:block;
+    font-size:13px;
+    color:#7A7264;
+    margin-bottom:8px;
+  }
+  .input-row{
+    display:flex;
+    align-items:center;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:var(--card);
+    overflow:hidden;
+  }
+  .input-row span{
+    padding:14px 4px 14px 16px;
+    color:#7A7264;
+    font-family:'SFMono-Regular',monospace;
+  }
+  .input-row input{
+    border:none;
+    outline:none;
+    padding:14px 16px 14px 4px;
+    font-size:20px;
+    font-family:'SFMono-Regular',monospace;
+    width:100%;
+    background:transparent;
+    color:var(--ink);
+  }
+  .go{
+    margin-top:16px;
+    width:100%;
+    padding:14px;
+    background:var(--plum);
+    color:var(--paper);
+    border:none;
+    border-radius:4px;
+    font-size:15px;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .go:hover{opacity:0.92;}
+
+  .result{
+    margin-top:44px;
+    padding-top:36px;
+    border-top:1px solid var(--line);
+    display:none;
+  }
+  .result.show{display:block;}
+  .headline{
+    font-size:clamp(24px,4.5vw,32px);
+    line-height:1.3;
+    margin:0 0 28px;
+  }
+  .headline .pct{
+    color:var(--plum);
+    font-weight:600;
+  }
+  .bar-wrap{
+    margin-bottom:28px;
+  }
+  .bar-track{
+    position:relative;
+    height:10px;
+    background:var(--line);
+    border-radius:5px;
+    overflow:visible;
+  }
+  .bar-fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    background:var(--brass);
+    border-radius:5px;
+  }
+  .bar-marker{
+    position:absolute;
+    top:-6px;
+    width:2px;
+    height:22px;
+    background:var(--ink);
+  }
+  .bar-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:#9A9284;
+    margin-top:6px;
+  }
+  .stats{
+    display:grid;
+    gap:12px;
+    margin-bottom:28px;
+  }
+  .stats .row{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .stats .row .k{color:#5A5248;}
+  .stats .row .v{font-family:'SFMono-Regular',monospace;}
+
+  .share{
+    display:flex;
+    gap:10px;
+  }
+  .share button{
+    flex:1;
+    padding:12px;
+    border:1px solid var(--line);
+    background:var(--card);
+    border-radius:4px;
+    font-family:inherit;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .share button:hover{border-color:var(--plum);}
+
+  .ad-slot{
+    margin-top:48px;
+    padding:18px;
+    border:1px dashed var(--line);
+    border-radius:4px;
+    text-align:center;
+    font-size:12px;
+    color:#9A9284;
+  }
+  footer{
+    margin-top:48px;
+    font-size:12.5px;
+    color:#9A9284;
+    max-width:56ch;
+  }
+  footer a{color:#7A7264;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>How rich are you, really?</h1>
+  <p class="lede">Enter your household's total pre-tax income. See exactly where it ranks against every other household in the United States.</p>
+
+  <div class="field">
+    <label>Annual household income (pre-tax)</label>
+    <div class="input-row">
+      <span>$</span>
+      <input type="text" inputmode="numeric" id="income" placeholder="e.g. 85,000" autocomplete="off">
+    </div>
+  </div>
+  <button class="go" id="calc">See my percentile</button>
+
+  <div class="result" id="result">
+    <div class="headline" id="headline"></div>
+
+    <div class="bar-wrap">
+      <div class="bar-track">
+        <div class="bar-fill" id="barFill"></div>
+        <div class="bar-marker" id="barMarker"></div>
+      </div>
+      <div class="bar-labels"><span>Poorest</span><span>Richest</span></div>
+    </div>
+
+    <div class="stats">
+      <div class="row"><span class="k">US median household income</span><span class="v">$83,592</span></div>
+      <div class="row"><span class="k">Households earning less than you</span><span class="v num" id="lessThan"></span></div>
+      <div class="row"><span class="k">Top 1% threshold</span><span class="v">$659,060</span></div>
+    </div>
+
+    <div class="share">
+      <button id="copyBtn">Copy my result</button>
+    </div>
+  </div>
+
+  <div class="ad-slot">Ad space — 300×250 or responsive unit</div>
+
+  <footer>
+    <p>Based on 2025 US household income percentile data (income earned in 2024), from DQYDJ's analysis of IPUMS CPS microdata. Percentiles between published data points are estimated by interpolation, so treat this as a close approximation rather than an exact figure. Household income includes wages, business, investment, and other income for everyone in the household combined.</p>
+  </footer>
+</div>
+
+<script>
+  // Control points: [income in USD, percentile], sourced from 2025 US household
+  // income data (DQYDJ / IPUMS CPS). Interpolated in log-income space between points.
+  const points = [
+    [0, 1],
+    [1470, 2],
+    [5401, 3],
+    [9600, 4],
+    [11604, 5],
+    [41401, 25],
+    [83592, 50],
+    [153000, 75],
+    [251036, 90],
+    [335575, 95],
+    [659060, 99],
+    [3000000, 99.9]
+  ];
+
+  function percentileForIncome(income){
+    if(income <= 0) return 1;
+    if(income >= points[points.length-1][0]) return 99.9;
+    for(let i=0;i<points.length-1;i++){
+      const [x0,p0] = points[i];
+      const [x1,p1] = points[i+1];
+      if(income >= x0 && income <= x1){
+        // interpolate in log space to smooth the curve, guard against log(0)
+        const lx0 = Math.log(Math.max(x0,1));
+        const lx1 = Math.log(Math.max(x1,1));
+        const lx = Math.log(Math.max(income,1));
+        const t = lx1 === lx0 ? 0 : (lx - lx0) / (lx1 - lx0);
+        return p0 + t * (p1 - p0);
+      }
+    }
+    return 50;
+  }
+
+  const incomeEl = document.getElementById('income');
+  const resultEl = document.getElementById('result');
+  const headlineEl = document.getElementById('headline');
+  const barFill = document.getElementById('barFill');
+  const barMarker = document.getElementById('barMarker');
+  const lessThanEl = document.getElementById('lessThan');
+
+  function fmtMoney(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+
+  function run(){
+    const raw = incomeEl.value.replace(/[^0-9.]/g,'');
+    const income = parseFloat(raw);
+    if(!raw || isNaN(income) || income < 0) return;
+
+    const pct = percentileForIncome(income);
+    const pctDisplay = pct >= 99 ? pct.toFixed(1) : Math.round(pct);
+    const beats = pct >= 99 ? pct.toFixed(1) : Math.round(pct);
+
+    headlineEl.innerHTML = `Your household income is higher than about <span class="pct">${beats}%</span> of US households.`;
+    lessThanEl.textContent = beats + '%';
+
+    const clamped = Math.min(99.9, Math.max(1, pct));
+    barFill.style.width = clamped + '%';
+    barMarker.style.left = clamped + '%';
+
+    resultEl.classList.add('show');
+  }
+
+  document.getElementById('calc').addEventListener('click', run);
+  incomeEl.addEventListener('keydown', e => { if(e.key === 'Enter') run(); });
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const text = headlineEl.textContent + ' See yours.';
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = original, 1500);
+    });
+  });
+</script>
+</body>
+</html>
